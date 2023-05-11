@@ -10,20 +10,21 @@ security:
             entity:
                 class: App\Entity\User
                 property: email
+        ldap_server:
+            ldap:
+                service: Symfony\Component\Ldap\Ldap
+                base_dn: dc=louislocal,dc=com # Domaine dans le ldap
+                search_dn: cn=user-ro,dc=louislocal,dc=com # Utilisateur dans l'AD (readonly)
+                search_password: ro-pass # Mot de passe du user en readonly
+                uid_key: cn
+                default_roles: ROLE_USER
     firewalls:
         login:
-            pattern: ^/api/login
+            pattern: ^/api/login_check
+            lazy: true
             stateless: true
-            provider: app_user_provider
-            json_login:
-                username_path: email
-                check_path: /api/login_check
-                success_handler: lexik_jwt_authentication.handler.authentication_success
-                failure_handler: lexik_jwt_authentication.handler.authentication_failure
-        api:
-            pattern: ^/api
-            stateless: true
-            jwt: ~
+            provider: ldap_server
+            custom_authenticator: App\Security\CustomLdapAuthenticator
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
@@ -42,7 +43,7 @@ security:
     access_control:
         # - { path: ^/admin, roles: ROLE_ADMIN }
         # - { path: ^/profile, roles: ROLE_USER }
-        - { path: ^/api/login, roles: PUBLIC_ACCESS }
+        - { path: ^/api/login_check, roles: PUBLIC_ACCESS }
         - { path: ^/api/songs, roles: ROLE_ADMIN}
 
 when@test:

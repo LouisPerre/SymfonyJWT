@@ -20,5 +20,24 @@ services:
             - '../src/Entity/'
             - '../src/Kernel.php'
 
+    Symfony\Component\Ldap\Ldap:
+        arguments: ['@Symfony\Component\Ldap\Adapter\ExtLdap\Adapter']
+        tags: ['ldap']
+    Symfony\Component\Ldap\Adapter\ExtLdap\Adapter:
+        arguments:
+            - host: '%env(LDAP_HOST)%'
+              port: 389
+              options:
+                  protocol_version: 3
+                  referrals: false
+    App\Service\ActiveDirectory:
+        bind:
+            $ldapServiceDn: dc=louislocal,dc=com
+            $ldapServiceUser: cn=user-ro
+            $ldapServicePassword: ro-pass
+    App\Security\CustomLdapAuthenticator:
+        bind:
+            $jwtTime: '%env(JWT_TIME)%'
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
